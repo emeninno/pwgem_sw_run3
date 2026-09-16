@@ -1,2 +1,2 @@
 # pwgem_sw_run3
-Software to analyze dileptons and photons in PWG-EM
+Software for the analysis of dielectrons and photons in PWG-EM
