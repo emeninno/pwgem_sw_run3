@@ -5,6 +5,23 @@ import numpy as np
 import yaml
 import argparse
 import ROOT
+import subprocess
+
+SEGFAULT_PROCESS_RETURNCODE = -11
+
+
+segfaulting_code = "import ctypes ; ctypes.string_at(0)"  # https://codegolf.stackexchange.com/a/4694/115779
+try:
+    subprocess.run(["python3", "-c", segfaulting_code],
+                   check=True)
+except subprocess.CalledProcessError as err:
+    if err.returncode == SEGFAULT_PROCESS_RETURNCODE:
+        print("probably segfaulted")
+    else:
+        print(f"crashed for other reasons: {err.returncode}")
+else:
+    print("ok")
+
 ROOT.gROOT.SetBatch(True)
 from ROOT import TFile, TDirectory, TH1F, TH2F, THnSparseF
 from dilepton_analyzer import DileptonAnalyzer
@@ -33,7 +50,6 @@ else:
     is_mc = False;
     period = config["period_data"];
 pass_number = config["pass_number"];
-
 #__________________________________________________________________
 def set_range_00(hs):
     hs.GetAxis(0).SetRange(0, 0);
@@ -113,11 +129,28 @@ def run_mee_ptee_dcaee(filename, tasknames, arr_mee, arr_ptee, arr_dcaee):
         nbin = np.array([len(arr_mee)-1, len(arr_ptee)-1, len(arr_dcaee)-1], dtype=np.int32);
         xmin = np.array([arr_mee[0], arr_ptee[0], arr_dcaee[0]], dtype=np.float64);
         xmax = np.array([arr_mee[-1], arr_ptee[-1], arr_dcaee[-1]], dtype=np.float64);
+        
+        # Debug prints for nbin, xmin, xmax
+        #print(f"nbin: {nbin}")
+        #print(f"xmin: {xmin}")
+        #print(f"xmax: {xmax}")
         hs_uls = THnSparseF("hs_uls", "#it{N}_{ee}^{all}/#it{N}_{ev};#it{m}_{ee} (GeV/#it{c}^{2});#it{p}_{T,ee} (GeV/#it{c});DCA_{ee}^{3D} (#sigma);", __ndim, nbin, xmin, xmax);
+        # Check histogram initialization
+        if not hs_uls:
+            raise RuntimeError("Failed to initialize hs_uls histogram.")
         hs_uls.Sumw2();
+
         hs_uls.SetBinEdges(0, arr_mee);
         hs_uls.SetBinEdges(1, arr_ptee);
         hs_uls.SetBinEdges(2, arr_dcaee);
+
+        # Debug prints for bin edges
+        #print(f"arr_mee: {arr_mee}")
+        #print(f"arr_ptee: {arr_ptee}")
+        #print(f"arr_dcaee: {arr_dcaee}")
+        #print(f"hs_uls.GetAxis(0).GetXmin(): {hs_uls.GetAxis(0).GetXmin()}, hs_uls.GetAxis(0).GetXmax(): {hs_uls.GetAxis(0).GetXmax()}")
+        #print(f"hs_uls.GetAxis(1).GetXmin(): {hs_uls.GetAxis(1).GetXmin()}, hs_uls.GetAxis(1).GetXmax(): {hs_uls.GetAxis(1).GetXmax()}")
+        #print(f"hs_uls.GetAxis(2).GetXmin(): {hs_uls.GetAxis(2).GetXmin()}, hs_uls.GetAxis(2).GetXmax(): {hs_uls.GetAxis(2).GetXmax()}")
         hs_R = hs_uls.Clone("hs_R");
         hs_R.SetTitle("R factor");
         hs_bkg = hs_uls.Clone("hs_bkg");
@@ -131,13 +164,15 @@ def run_mee_ptee_dcaee(filename, tasknames, arr_mee, arr_ptee, arr_dcaee):
             dca_center = (dca_min + dca_max)/2;
             bin_dca1 = hs_uls_same.GetAxis(2).FindBin(dca_min + __delta);
             bin_dca2 = hs_uls_same.GetAxis(2).FindBin(dca_max - __delta);
+            #print("bin_dca1: ", bin_dca1)
+            #print("bin_dca2: ", bin_dca2)
+
             hs_uls_same .GetAxis(2).SetRange(bin_dca1, bin_dca2);
             hs_lspp_same.GetAxis(2).SetRange(bin_dca1, bin_dca2);
             hs_lsmm_same.GetAxis(2).SetRange(bin_dca1, bin_dca2);
             hs_uls_mix  .GetAxis(2).SetRange(bin_dca1, bin_dca2);
             hs_lspp_mix .GetAxis(2).SetRange(bin_dca1, bin_dca2);
             hs_lsmm_mix .GetAxis(2).SetRange(bin_dca1, bin_dca2);
-
             #h2R = TH2F("h2R_dca{0}".format(idca), "R factor in {0:2.1f} < DCA_{{ee}}^{{3D}} < {1:2.1f} #sigma;#it{{m}}_{{ee}} (GeV/#it{{c}}^{{2}});#it{{p}}_{{T,ee}} (GeV/#it{{c}})".format(dca_min, dca_max) , len(arr_mee)-1, arr_mee, len(arr_ptee)-1, arr_ptee);
             #h2R.Sumw2();
             #h2R.SetContour(100);
@@ -148,20 +183,20 @@ def run_mee_ptee_dcaee(filename, tasknames, arr_mee, arr_ptee, arr_dcaee):
                 pt_center = (pt_min + pt_max)/2;
                 bin_pt1 = hs_uls_same.GetAxis(1).FindBin(pt_min + __delta);
                 bin_pt2 = hs_uls_same.GetAxis(1).FindBin(pt_max - __delta);
+                #print("bin_pt1: ", bin_pt1)
+                #print("bin_pt2: ", bin_pt2)
                 hs_uls_same .GetAxis(1).SetRange(bin_pt1, bin_pt2);
                 hs_lspp_same.GetAxis(1).SetRange(bin_pt1, bin_pt2);
                 hs_lsmm_same.GetAxis(1).SetRange(bin_pt1, bin_pt2);
                 hs_uls_mix  .GetAxis(1).SetRange(bin_pt1, bin_pt2);
                 hs_lspp_mix .GetAxis(1).SetRange(bin_pt1, bin_pt2);
                 hs_lsmm_mix .GetAxis(1).SetRange(bin_pt1, bin_pt2);
-
                 h1m_uls_same  = hs_uls_same.Projection(0);
                 h1m_lspp_same = hs_lspp_same.Projection(0);
                 h1m_lsmm_same = hs_lsmm_same.Projection(0);
                 h1m_uls_mix   = hs_uls_mix.Projection(0);
                 h1m_lspp_mix  = hs_lspp_mix.Projection(0);
                 h1m_lsmm_mix  = hs_lsmm_mix.Projection(0);
-
                 h1m_uls_same .SetName("h1m_uls_same_pt{0}_dca{1}".format(ipt, idca));
                 h1m_lspp_same.SetName("h1m_lspp_same_pt{0}_dca{1}".format(ipt, idca));
                 h1m_lsmm_same.SetName("h1m_lsmm_same_pt{0}_dca{1}".format(ipt, idca));
@@ -191,8 +226,7 @@ def run_mee_ptee_dcaee(filename, tasknames, arr_mee, arr_ptee, arr_dcaee):
                 h1m_lsmm_mix .SetYTitle("counts per bin");
 
                 ana = DileptonAnalyzer(h1m_uls_same, h1m_lspp_same, h1m_lsmm_same, h1m_uls_mix, h1m_lspp_mix, h1m_lsmm_mix, arr_mee);
-                [h1m_uls_same_rebin, h1m_lspp_same_rebin, h1m_lsmm_same_rebin, h1m_uls_mix_rebin, h1m_lspp_mix_rebin, h1m_lsmm_mix_rebin, h1R, h1bkg, h1sig] = ana.run();
-
+                [h1m_uls_same_rebin, h1m_lspp_same_rebin, h1m_lsmm_same_rebin, h1m_uls_mix_rebin, h1m_lspp_mix_rebin, h1m_lsmm_mix_rebin, h1R, h1bkg, h1sig] = ana.run();    
                 h1m_uls_same_rebin .SetName("h1m_uls_same_pt{0}_dca{1}_rebin".format(ipt, idca));
                 h1m_lspp_same_rebin.SetName("h1m_lspp_same_pt{0}_dca{1}_rebin".format(ipt, idca));
                 h1m_lsmm_same_rebin.SetName("h1m_lsmm_same_pt{0}_dca{1}_rebin".format(ipt, idca));
@@ -226,8 +260,7 @@ def run_mee_ptee_dcaee(filename, tasknames, arr_mee, arr_ptee, arr_dcaee):
                 #outdir.WriteTObject(h1m_lsmm_mix_rebin );
                 #outdir.WriteTObject(h1R);
                 #outdir.WriteTObject(h1bkg);
-                #outdir.WriteTObject(h1sig);
-
+                #outdir.WriteTObject(h1s);
                 for im in range(0, len(arr_mee)-1):
                     m_min = arr_mee[im];
                     m_max = arr_mee[im+1];
@@ -236,7 +269,11 @@ def run_mee_ptee_dcaee(filename, tasknames, arr_mee, arr_ptee, arr_dcaee):
                     global_bin_id = hs_R  .GetBin(np.array([m_center, pt_center, dca_center], dtype=np.float64), True);
                     global_bin_id = hs_bkg.GetBin(np.array([m_center, pt_center, dca_center], dtype=np.float64), True);
                     global_bin_id = hs_sig.GetBin(np.array([m_center, pt_center, dca_center], dtype=np.float64), True);
-                    #print(m_center, pt_center, dca_center, global_bin_id);
+                    #print(f"global_bin_id: {global_bin_id}")
+                    #print(f"m_center: {m_center}, pt_center: {pt_center}, dca_center: {dca_center}")
+                    if global_bin_id == 0:
+                        print(f"Invalid global_bin_id for coordinates: m_center={m_center}, pt_center={pt_center}, dca_center={dca_center}")
+                        continue  # Skip this iteration
                     hs_uls.SetBinContent(global_bin_id, h1m_uls_same_rebin.GetBinContent(im+1));
                     hs_uls.SetBinError(global_bin_id, h1m_uls_same_rebin.GetBinError(im+1));
                     hs_R  .SetBinContent(global_bin_id, h1R.GetBinContent(im+1));
@@ -247,7 +284,9 @@ def run_mee_ptee_dcaee(filename, tasknames, arr_mee, arr_ptee, arr_dcaee):
                     hs_sig.SetBinError(global_bin_id, h1sig.GetBinError(im+1));
                     #h2R.SetBinContent(im+1, ipt+1, h1R.GetBinContent(im+1));
                     #h2R.SetBinError(im+1, ipt+1, h1R.GetBinError(im+1));
+                    #print("End of setting bin content and bin error for hs histograms")
             #outdir.WriteTObject(h2R);
+            #print("End of the dca loop");
         hs_uls.Scale(1/nev);
         hs_bkg.Scale(1/nev);
         hs_sig.Scale(1/nev);
