@@ -19,6 +19,9 @@ gStyle.SetOptTitle(0);
 def draw_mee_uls_ls(filename, taskname, ptmin, ptmax, dcamin, dcamax, suffix=""):
     rootfile = TFile(filename, "READ");
     rootdire = rootfile.Get(taskname);
+    print(filename)
+    print(taskname)
+    print(type(rootdire))
     hs_uls = rootdire.Get("hs_uls");
     hs_bkg = rootdire.Get("hs_bkg");
     hs_sig = rootdire.Get("hs_sig");
@@ -97,8 +100,8 @@ def draw_mee_uls_ls(filename, taskname, ptmin, ptmax, dcamin, dcamax, suffix="")
     txt.SetTextAlign(12);#middle,left
     txt.SetTextFont(42);#helvetica
     txt.SetTextSize(0.035);
-    txt.AddText("ALICE WIP");
-    txt.AddText("pp at #sqrt{#it{s}} = 13.6 TeV");
+    txt.AddText("ALICE");
+    txt.AddText("PbPb at #sqrt{#it{s}_{NN}} = 5.36 TeV");
     txt.AddText("#it{p}_{T,e} > 0.2 GeV/#it{c}, |#it{#eta}_{e}| < 0.8");
     txt.AddText("|#it{y}_{ee}| < 0.8");
     txt.AddText("{0:2.1f} < #it{{p}}_{{T,ee}} < {1:2.1f} GeV/#it{{c}}".format(ptmin, ptmax));
@@ -178,8 +181,8 @@ def draw_mee_sbratio(filename, taskname, ptmin, ptmax, dcamin, dcamax, suffix=""
     txt.SetTextAlign(12);#middle,left
     txt.SetTextFont(42);#helvetica
     txt.SetTextSize(0.035);
-    txt.AddText("ALICE WIP");
-    txt.AddText("pp at #sqrt{#it{s}} = 13.6 TeV");
+    txt.AddText("ALICE");
+    txt.AddText("PbPb at #sqrt{#it{s}_{NN}} = 5.36 TeV");
     txt.AddText("#it{p}_{T,e} > 0.2 GeV/#it{c}, |#it{#eta}_{e}| < 0.8");
     txt.AddText("|#it{y}_{ee}| < 0.8");
     txt.AddText("{0:2.1f} < #it{{p}}_{{T,ee}} < {1:2.1f} GeV/#it{{c}}".format(ptmin, ptmax));
@@ -191,8 +194,8 @@ def draw_mee_sbratio(filename, taskname, ptmin, ptmax, dcamin, dcamax, suffix=""
     c1.Modified();
     c1.Update();
     ROOT.SetOwnership(c1,False);
-    c1.SaveAs("{0}_mee_sbratio_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
-    c1.SaveAs("{0}_mee_sbratio_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_mee_sbratio_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_mee_sbratio_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
     c1.SaveAs("{0}_mee_sbratio_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.png".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
 
     rootfile.Close();
@@ -201,11 +204,23 @@ def draw_mee_sbratio(filename, taskname, ptmin, ptmax, dcamin, dcamax, suffix=""
 def draw_mee_significance(filename, taskname, ptmin, ptmax, dcamin, dcamax, suffix=""):
     rootfile = TFile(filename, "READ");
     rootdire = rootfile.Get(taskname);
+    rootdire.ls();
     hs_uls = rootdire.Get("hs_uls");
     hs_bkg = rootdire.Get("hs_bkg");
     hs_sig = rootdire.Get("hs_sig");
+    h1z = None;
+    for key in rootdire.GetListOfKeys():
+    	if key.GetName() == "Event/after/hZvtx":
+        	h1z = key.ReadObj()
+        	break
 
-    h1z = rootdire.Get("hZvtx");
+    if not h1z:
+    	print("Error: Could not find object 'Event/after/hZvtx'.")
+    	return
+    #h1z = rootdire.FindObject("Event/after/hZvtx");
+    #if not h1z:
+    #	print("Error: Could not find object 'Event/after/hZvtx'.")
+    #	return
     nev = h1z.GetEntries();
 
     bin0 = hs_uls.GetAxis(1).FindBin(ptmin + 1e-3);
@@ -262,8 +277,8 @@ def draw_mee_significance(filename, taskname, ptmin, ptmax, dcamin, dcamax, suff
     txt.SetTextAlign(12);#middle,left
     txt.SetTextFont(42);#helvetica
     txt.SetTextSize(0.035);
-    txt.AddText("ALICE WIP");
-    txt.AddText("pp at #sqrt{#it{s}} = 13.6 TeV");
+    txt.AddText("ALICE");
+    txt.AddText("PbPb at #sqrt{#it{s}_{NN}} = 5.36 TeV");
     txt.AddText("#it{p}_{T,e} > 0.2 GeV/#it{c}, |#it{#eta}_{e}| < 0.8");
     txt.AddText("|#it{y}_{ee}| < 0.8");
     txt.AddText("{0:2.1f} < #it{{p}}_{{T,ee}} < {1:2.1f} GeV/#it{{c}}".format(ptmin, ptmax));
@@ -275,8 +290,8 @@ def draw_mee_significance(filename, taskname, ptmin, ptmax, dcamin, dcamax, suff
     c1.Modified();
     c1.Update();
     ROOT.SetOwnership(c1,False);
-    c1.SaveAs("{0}_mee_significance_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
-    c1.SaveAs("{0}_mee_significance_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_mee_significance_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_mee_significance_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
     c1.SaveAs("{0}_mee_significance_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.png".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
 
     rootfile.Close();
@@ -359,8 +374,8 @@ def draw_mee_sbratio_multiple(filename, tasknames, ptmin, ptmax, dcamin, dcamax,
     txt.SetTextAlign(12);#middle,left
     txt.SetTextFont(42);#helvetica
     txt.SetTextSize(0.035);
-    txt.AddText("ALICE WIP");
-    txt.AddText("pp at #sqrt{#it{s}} = 13.6 TeV");
+    txt.AddText("ALICE");
+    txt.AddText("PbPb at #sqrt{#it{s}_{NN}} = 5.36 TeV");
     txt.AddText("#it{p}_{T,e} > 0.2 GeV/#it{c}, |#it{#eta}_{e}| < 0.8");
     txt.AddText("|#it{y}_{ee}| < 0.8");
     txt.AddText("{0:2.1f} < #it{{p}}_{{T,ee}} < {1:2.1f} GeV/#it{{c}}".format(ptmin, ptmax));
@@ -373,8 +388,8 @@ def draw_mee_sbratio_multiple(filename, tasknames, ptmin, ptmax, dcamin, dcamax,
     c1.Modified();
     c1.Update();
     ROOT.SetOwnership(c1,False);
-    c1.SaveAs("{0}_mee_sbratio_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
-    c1.SaveAs("{0}_mee_sbratio_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_mee_sbratio_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_mee_sbratio_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
     c1.SaveAs("{0}_mee_sbratio_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.png".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
 
     rootfile.Close();
@@ -420,7 +435,7 @@ def draw_mee_significance_multiple(filename, tasknames, ptmin, ptmax, dcamin, dc
         hs_uls = rootdire.Get("hs_uls");
         hs_bkg = rootdire.Get("hs_bkg");
         hs_sig = rootdire.Get("hs_sig");
-        h1z = rootdire.Get("hZvtx");
+        h1z = rootdire.FindObject("Event/after/hZvtx");
         nev = h1z.GetEntries();
 
         bin0 = hs_uls.GetAxis(1).FindBin(ptmin + 1e-3);
@@ -460,8 +475,8 @@ def draw_mee_significance_multiple(filename, tasknames, ptmin, ptmax, dcamin, dc
     txt.SetTextAlign(12);#middle,left
     txt.SetTextFont(42);#helvetica
     txt.SetTextSize(0.035);
-    txt.AddText("ALICE WIP");
-    txt.AddText("pp at #sqrt{#it{s}} = 13.6 TeV");
+    txt.AddText("ALICE");
+    txt.AddText("PbPb at #sqrt{#it{s}_{NN}} = 5.36 TeV");
     txt.AddText("#it{p}_{T,e} > 0.2 GeV/#it{c}, |#it{#eta}_{e}| < 0.8");
     txt.AddText("|#it{y}_{ee}| < 0.8");
     txt.AddText("{0:2.1f} < #it{{p}}_{{T,ee}} < {1:2.1f} GeV/#it{{c}}".format(ptmin, ptmax));
@@ -474,8 +489,8 @@ def draw_mee_significance_multiple(filename, tasknames, ptmin, ptmax, dcamin, dc
     c1.Modified();
     c1.Update();
     ROOT.SetOwnership(c1,False);
-    c1.SaveAs("{0}_mee_significance_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
-    c1.SaveAs("{0}_mee_significance_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_mee_significance_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_mee_significance_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
     c1.SaveAs("{0}_mee_significance_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.png".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
 
     rootfile.Close();
@@ -562,8 +577,8 @@ def draw_mee_multiple(filename, tasknames, ptmin, ptmax, dcamin, dcamax, suffix=
     txt.SetTextAlign(12);#middle,left
     txt.SetTextFont(42);#helvetica
     txt.SetTextSize(0.035);
-    txt.AddText("ALICE WIP");
-    txt.AddText("pp at #sqrt{#it{s}} = 13.6 TeV");
+    txt.AddText("ALICE");
+    txt.AddText("PbPb at #sqrt{#it{s}_{NN}} = 5.36 TeV");
     txt.AddText("#it{p}_{T,e} > 0.2 GeV/#it{c}, |#it{#eta}_{e}| < 0.8");
     txt.AddText("|#it{y}_{ee}| < 0.8");
     txt.AddText("{0:2.1f} < #it{{p}}_{{T,ee}} < {1:2.1f} GeV/#it{{c}}".format(ptmin, ptmax));
@@ -576,8 +591,8 @@ def draw_mee_multiple(filename, tasknames, ptmin, ptmax, dcamin, dcamax, suffix=
     c1.Modified();
     c1.Update();
     ROOT.SetOwnership(c1,False);
-    c1.SaveAs("{0}_raw_dndm_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
-    c1.SaveAs("{0}_raw_dndm_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_raw_dndm_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_raw_dndm_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
     c1.SaveAs("{0}_raw_dndm_multiple_pt{1:2.1f}_{2:2.1f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.png".format(date, ptmin, ptmax, dcamin, dcamax, suffix));
 
     rootfile.Close();
@@ -633,7 +648,7 @@ def draw_ptee_upc(filename, taskname, cen1, cen2, mmin, mmax, dcamin, dcamax, su
     txt.SetTextAlign(12);#middle,left
     txt.SetTextFont(42);#helvetica
     txt.SetTextSize(0.035);
-    txt.AddText("ALICE WIP");
+    txt.AddText("ALICE");
     txt.AddText("{0}#minus{1}% Pb#minusPb at #sqrt{{#it{{s}}_{{NN}}}} = 5.36 TeV".format(cen1, cen2));
     txt.AddText("#it{p}_{T,e} > 0.4 GeV/#it{c}, |#it{#eta}_{e}| < 0.8");
     txt.AddText("|#it{y}_{ee}| < 0.8");
@@ -646,8 +661,8 @@ def draw_ptee_upc(filename, taskname, cen1, cen2, mmin, mmax, dcamin, dcamax, su
     c1.Modified();
     c1.Update();
     ROOT.SetOwnership(c1,False);
-    c1.SaveAs("{0}_raw_dndpt_m{1:3.2f}_{2:3.2f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, mmin, mmax, dcamin, dcamax, suffix));
-    c1.SaveAs("{0}_raw_dndpt_m{1:3.2f}_{2:3.2f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, mmin, mmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_raw_dndpt_m{1:3.2f}_{2:3.2f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.eps".format(date, mmin, mmax, dcamin, dcamax, suffix));
+    #c1.SaveAs("{0}_raw_dndpt_m{1:3.2f}_{2:3.2f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.pdf".format(date, mmin, mmax, dcamin, dcamax, suffix));
     c1.SaveAs("{0}_raw_dndpt_m{1:3.2f}_{2:3.2f}GeV_dca3d{3:2.1f}_{4:2.1f}sigma{5}.png".format(date, mmin, mmax, dcamin, dcamax, suffix));
 
     rootfile.Close();
@@ -655,13 +670,14 @@ def draw_ptee_upc(filename, taskname, cen1, cen2, mmin, mmax, dcamin, dcamax, su
 #__________________________________________________________
 #__________________________________________________________
 if __name__ == "__main__":
-    filename = "mee_ptee_dcaee_pp_13.6TeV_LHC22o_pass6.root";
-    taskname = "dielectron-qc";
+    filename = "mee_ptee_dcaee_PbPb_5.36TeV_LHC25_pass1_0090.root";
+    taskname = "dielectron_pre_occi_0_5000_cent_0090_detadphiCut";
     ptmin = 0;
     ptmax = 10;
     dcamin = 0;
     dcamax = 10;
-    suffix = "_pp_13.6TeV_LHC22o_pass6";
+    suffix = "";
+    #suffix = "_0_5000_cent_0090_detadphiCut";
     draw_mee_uls_ls(filename, taskname, 0.0, 10.0, 0.0, 10.0, suffix);
     draw_mee_uls_ls(filename, taskname, 0.0, 10.0, 0.0,  0.5, suffix);
     draw_mee_uls_ls(filename, taskname, 0.0, 10.0, 2.0, 10.0, suffix);
